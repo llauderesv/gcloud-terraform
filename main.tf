@@ -72,10 +72,6 @@ resource "google_sql_database_instance" "my_database_instance_e_commerce" {
 
 }
 
-data "google_sql_database_instance" "ip" {
-  name = google_sql_database_instance.my_database_instance_e_commerce.name
-}
-
 // Project ID format in GCP projects/friendly-slate-338113/instances/my-database-instance-e-commerce/databases/my-database-e-commerce
 resource "google_sql_database" "database" {
   instance = google_sql_database_instance.my_database_instance_e_commerce.name
@@ -90,7 +86,7 @@ resource "google_sql_user" "users" {
   name     = "user"
   password = "user${random_id.db_name_suffix.hex}"
   instance = google_sql_database_instance.my_database_instance_e_commerce.name
-  host     = data.google_sql_database_instance.ip.public_ip_address
+  host     = google_sql_database_instance.my_database_instance_e_commerce.public_ip_address
 }
 
 resource "null_resource" "setup_db" {
