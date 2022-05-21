@@ -27,11 +27,15 @@ provider "google" {
 
 // Project ID format in GCP projects/friendly-slate-338113/instances/my-database-instance-e-commerce/databases/my-database-e-commerce
 resource "google_sql_database" "database" {
-  instance  = google_sql_database_instance.my_database_instance_e_commerce.name
-  name      = "my-database-${local.name_suffix}"
-  charset   = "utf8mb4"
-  collation = "utf8mb4_0900_ai_ci"
-  project   = "friendly-slate-338113"
+  instance = google_sql_database_instance.my_database_instance_e_commerce.name
+  name     = "my-database-${local.name_suffix}"
+}
+
+resource "null_resource" "setup_db" {
+  depends_on = [google_sql_database.database]
+  provisioner "local-exec" {
+    command = "mysql -h ${var.sql_host} -u ${var.sql_username} -p${var.sql_password} < setup.sql"
+  }
 }
 
 # See versions at https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/sql_database_instance#database_version
@@ -68,6 +72,10 @@ resource "google_sql_database_instance" "my_database_instance_e_commerce" {
     ip_configuration {
       ipv4_enabled = true
       require_ssl  = false
+      authorized_networks {
+        name  = "Local Machine"
+        value = "136.158.7.165"
+      }
     }
 
     location_preference {
@@ -75,7 +83,6 @@ resource "google_sql_database_instance" "my_database_instance_e_commerce" {
     }
   }
 
-  timeouts {}
 }
 
 // Get all available regions in GCP
