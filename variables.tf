@@ -5,15 +5,15 @@ variable "project_id" {
 
 variable "sql_host" {
   description = "SQL Host Name"
-  sensitive = true
+  sensitive   = true
 }
 
 variable "sql_password" {
   description = "SQL Password"
-  sensitive = true
+  sensitive   = true
 }
 
 variable "sql_username" {
   description = "SQL Username"
-  sensitive = true
+  sensitive   = true
 }

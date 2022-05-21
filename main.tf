@@ -25,19 +25,6 @@ provider "google" {
   region  = local.region
 }
 
-// Project ID format in GCP projects/friendly-slate-338113/instances/my-database-instance-e-commerce/databases/my-database-e-commerce
-resource "google_sql_database" "database" {
-  instance = google_sql_database_instance.my_database_instance_e_commerce.name
-  name     = "my-database-${local.name_suffix}"
-}
-
-resource "null_resource" "setup_db" {
-  depends_on = [google_sql_database.database]
-  provisioner "local-exec" {
-    command = "mysql -h ${var.sql_host} -u ${var.sql_username} -p${var.sql_password} < setup.sql"
-  }
-}
-
 # See versions at https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/sql_database_instance#database_version
 resource "google_sql_database_instance" "my_database_instance_e_commerce" {
   database_version    = "MYSQL_8_0"
@@ -83,6 +70,40 @@ resource "google_sql_database_instance" "my_database_instance_e_commerce" {
     }
   }
 
+}
+
+data "google_sql_database_instance" "ip" {
+  name = google_sql_database_instance.my_database_instance_e_commerce.name
+}
+
+// Project ID format in GCP projects/friendly-slate-338113/instances/my-database-instance-e-commerce/databases/my-database-e-commerce
+resource "google_sql_database" "database" {
+  instance = google_sql_database_instance.my_database_instance_e_commerce.name
+  name     = "my-database-${local.name_suffix}"
+}
+
+resource "random_id" "db_name_suffix" {
+  byte_length = 4
+}
+
+resource "google_sql_user" "users" {
+  name     = "user"
+  password = "user${random_id.db_name_suffix.hex}"
+  instance = google_sql_database_instance.my_database_instance_e_commerce.name
+  host     = data.google_sql_database_instance.ip.public_ip_address
+}
+
+resource "null_resource" "setup_db" {
+  depends_on = [google_sql_database.database, google_sql_user.users]
+  provisioner "local-exec" {
+    command = "mysql -h ${var.sql_host} -u ${google_sql_user.users.name} -p${google_sql_user.users.password} < setup.sql"
+  }
+}
+
+output "db_password" {
+  description = "Database Password"
+  value       = google_sql_user.users.password
+  sensitive   = true
 }
 
 // Get all available regions in GCP
