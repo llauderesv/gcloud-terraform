@@ -23,6 +23,10 @@ locals {
     {
       name = "Local Machine"
       ip   = "136.158.7.165"
+    },
+    {
+      name = "On Prem"
+      ip   = "1.1.1.1" // This is just an example.
     }
   ]
 }
