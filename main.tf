@@ -26,7 +26,7 @@ provider "google" {
 }
 
 # See versions at https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/sql_database_instance#database_version
-resource "google_sql_database_instance" "my_database_instance_e_commerce" {
+resource "google_sql_database_instance" "database" {
   database_version    = "MYSQL_8_0"
   deletion_protection = true
   name                = "my-database-instance-${local.name_suffix}"
@@ -74,7 +74,7 @@ resource "google_sql_database_instance" "my_database_instance_e_commerce" {
 
 // Project ID format in GCP projects/friendly-slate-338113/instances/my-database-instance-e-commerce/databases/my-database-e-commerce
 resource "google_sql_database" "database" {
-  instance = google_sql_database_instance.my_database_instance_e_commerce.name
+  instance = google_sql_database_instance.database.name
   name     = "my-database-${local.name_suffix}"
 }
 
@@ -85,8 +85,8 @@ resource "random_id" "db_name_suffix" {
 resource "google_sql_user" "users" {
   name     = "user"
   password = "user${random_id.db_name_suffix.hex}"
-  instance = google_sql_database_instance.my_database_instance_e_commerce.name
-  host     = google_sql_database_instance.my_database_instance_e_commerce.public_ip_address
+  instance = google_sql_database_instance.database.name
+  host     = google_sql_database_instance.database.public_ip_address
 }
 
 resource "null_resource" "setup_db" {
