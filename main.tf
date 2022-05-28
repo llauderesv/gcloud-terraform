@@ -18,10 +18,17 @@ terraform {
 locals {
   name_suffix = "e-commerce"
   region      = "asia-east1"
+
+  authorized_networks = [
+    {
+      name = "Local Machine"
+      ip   = "136.158.7.165"
+    }
+  ]
 }
 
 provider "google" {
-  project = var.project_id
+  project = "friendly-slate-338113"
   region  = local.region
 }
 
@@ -59,9 +66,13 @@ resource "google_sql_database_instance" "database" {
     ip_configuration {
       ipv4_enabled = true
       require_ssl  = false
-      authorized_networks {
-        name  = "Local Machine"
-        value = "136.158.7.165"
+
+      dynamic "authorized_networks" {
+        for_each = local.authorized_networks
+        content {
+          name  = authorized_networks.value.name
+          value = authorized_networks.value.ip
+        }
       }
     }
 
@@ -73,7 +84,7 @@ resource "google_sql_database_instance" "database" {
 }
 
 // Project ID format in GCP projects/friendly-slate-338113/instances/my-database-instance-e-commerce/databases/my-database-e-commerce
-resource "google_sql_database" "database" {
+resource "google_sql_database" "database_instance" {
   instance = google_sql_database_instance.database.name
   name     = "my-database-${local.name_suffix}"
 }
@@ -86,11 +97,11 @@ resource "google_sql_user" "users" {
   name     = "user"
   password = "user${random_id.db_name_suffix.hex}"
   instance = google_sql_database_instance.database.name
-  host     = google_sql_database_instance.database.public_ip_address
+  host     = "136.158.7.165"
 }
 
 resource "null_resource" "setup_db" {
-  depends_on = [google_sql_database.database, google_sql_user.users]
+  depends_on = [google_sql_database.database_instance, google_sql_user.users]
   provisioner "local-exec" {
     command = "mysql -h ${var.sql_host} -u ${google_sql_user.users.name} -p${google_sql_user.users.password} < setup.sql"
   }
