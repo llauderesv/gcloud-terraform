@@ -16,6 +16,7 @@ terraform {
 }
 
 locals {
+  project_id  = "friendly-slate-338113"
   name_suffix = "e-commerce"
   region      = "asia-east1"
 
@@ -32,7 +33,7 @@ locals {
 }
 
 provider "google" {
-  project = "friendly-slate-338113"
+  project = local.project_id
   region  = local.region
 }
 
