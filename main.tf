@@ -119,10 +119,9 @@ output "db_password" {
 }
 
 // Get all available regions in GCP
-# data "google_compute_regions" "available" {
-# }
+data "google_compute_regions" "available" {}
 
-# output "all_regions" {
-#   value = data.google_compute_regions.available.names
-#   description = "Display the available regions in GCP."
-# }
+output "all_regions" {
+  value       = data.google_compute_regions.available.names
+  description = "GCP Available Regions."
+}
